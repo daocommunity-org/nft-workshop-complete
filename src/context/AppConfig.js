@@ -4,7 +4,7 @@ import * as eth from "ethers";
 import axios from "axios";
 import { NFTStorage, Blob } from "nft.storage";
 import { Contract } from "ethers";
-import abi from './utils'
+import {abi} from './utils'
 
 
 export const BlockchainConfig = React.createContext();
@@ -14,9 +14,9 @@ export const BlockchainProvider = ({ children }) => {
   const NFT_STORAGE_TOKEN = process.env.REACT_APP_PUBLIC_NFT_STORAGE_TOKEN;
 const client = new NFTStorage({ token: NFT_STORAGE_TOKEN });
 
-  const provider = new eth.JsonRpcProvider(window.ethereum);
+  const provider = new eth.providers.Web3Provider(window.ethereum);
   const signer = provider.getSigner();
-  const contract =  new Contract(contr_addr, abi, signer);
+  const contract =  new eth.Contract(contr_addr, abi, signer);
 
   const nftCurrency = "MATIC";
   const [currentAccount, setCurrentAccount] = useState("");
@@ -84,12 +84,12 @@ const client = new NFTStorage({ token: NFT_STORAGE_TOKEN });
     const signer = await provider.getSigner();
 
     const price = eth.utils.parseUnits(formInputPrice, "ether");
-    // const contract = fetchContract(signer);
-    const listingPrice = 0.00025;
-    console.log("hee", listingPrice);
+    
+    const listingPrice = await contract.getListingPrice();
+
     const transaction = !isReselling
       ? await contract.createToken(url, price, {
-          value: eth.parse,
+          value: listingPrice.toString(),
         })
       : await contract.resellToken(id, price, {
           value: listingPrice.toString(),
@@ -136,6 +136,6 @@ const client = new NFTStorage({ token: NFT_STORAGE_TOKEN });
     checkIfWalletIsConnect();
   }, []);
   return (
-    <BlockchainConfig.Provider value={{}}>{children}</BlockchainConfig.Provider>
+    <BlockchainConfig.Provider value={{fetchNFTs,uploadToIPFS,createNFT,createSale}}>{children}</BlockchainConfig.Provider>
   );
 };
