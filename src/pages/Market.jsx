@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { BlockchainConfig } from "../context/AppConfig";
 import NFTCard from "./components/NFTCard";
 
-export const Home = () => {
+export const Market = () => {
   const [nfts, setNfts] = useState([]);
   const [Loading, setLoading] = useState(true);
   const [OriginalNFTs, setOriginalNFTs] = useState([]);
@@ -11,30 +11,30 @@ export const Home = () => {
   useEffect(() => {
     fetchNFTs(setLoading).then((items) => {
       setNfts(items);
-
       setLoading(false);
       setOriginalNFTs(items);
+      console.log(OriginalNFTs);
     });
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#99FFE3]">
+    <div>
       <div className="flex justify-center sm:px-4 p-12 min-h-screen">
         <div id="marketid" className="w-full minmd:w-4/5">
           <div className="mt-4">
             {!Loading && nfts.length === 0 ? (
               <div className="flexCenter sm:p-4 p-16 ">
-                <h1 className="font-poppins dark:text-white text-nft-black-1 text-3xl font-extrabold">
+                <h1 className="text-white text-6xl font-extrabold shadow-md shadow-red-400 px-2 py-1 rounded-xl">
                   No NFTs Listed for Sale
                 </h1>
               </div>
             ) : (
-              <h2 className="font-poppins dark:text-white text-nft-black-1 text-2xl font-semibold mt-2 ml-4 sm:ml-2">
+              <h2 className="text-white text-6xl font-extrabold shadow-md shadow-red-400 px-2 py-1 rounded-xl">
                 NFTs listed for sale
               </h2>
             )}
 
-            <div className="mt-3 w-full flex flex-wrap justify-center md:justify-center">
+            <div className="mt-3 w-full grid grid-cols-4 gap-4 justify-center md:justify-center">
               {!Loading &&
                 nfts.map((nft) => (
                   <>
@@ -50,4 +50,3 @@ export const Home = () => {
     </div>
   );
 };
-

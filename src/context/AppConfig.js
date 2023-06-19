@@ -4,38 +4,40 @@ import * as eth from "ethers";
 import axios from "axios";
 import { NFTStorage, Blob } from "nft.storage";
 import { Contract } from "ethers";
-import {abi} from './utils'
-
+import { abi } from './utils'
+// require('dotenv').config()
 
 export const BlockchainConfig = React.createContext();
 
 export const BlockchainProvider = ({ children }) => {
-  const contr_addr =process.env.REACT_APP_CONTRACT;
+  const contr_addr = process.env.REACT_APP_CONTRACT;
   const NFT_STORAGE_TOKEN = process.env.REACT_APP_PUBLIC_NFT_STORAGE_TOKEN;
-const client = new NFTStorage({ token: NFT_STORAGE_TOKEN });
+  const client = new NFTStorage({ token: NFT_STORAGE_TOKEN });
 
   const provider = new eth.providers.Web3Provider(window.ethereum);
   const signer = provider.getSigner();
-  const contract =  new eth.Contract(contr_addr, abi, signer);
+  const contract = new eth.Contract(contr_addr, abi, signer);
 
   const nftCurrency = "MATIC";
+
   const [currentAccount, setCurrentAccount] = useState("");
+
   const connectWallet = async () => {
     if (!window.ethereum) return alert("Please install MetaMask.");
     const accounts = await window.ethereum.request({
       method: "eth_requestAccounts",
     });
+    console.log("Connected")
     setCurrentAccount(accounts[0]);
     window.location.reload();
   };
 
   const checkIfWalletIsConnect = async () => {
     if (!window.ethereum) return alert("Please install MetaMask.");
-
     const accounts = await window.ethereum.request({ method: "eth_accounts" });
-
     if (accounts.length) {
       setCurrentAccount(accounts[0]);
+      console.log("Connected")
     } else {
       console.log("No accounts found");
     }
@@ -84,16 +86,16 @@ const client = new NFTStorage({ token: NFT_STORAGE_TOKEN });
     const signer = await provider.getSigner();
 
     const price = eth.utils.parseUnits(formInputPrice, "ether");
-    
+
     const listingPrice = await contract.getListingPrice();
 
     const transaction = !isReselling
       ? await contract.createToken(url, price, {
-          value: listingPrice.toString(),
-        })
+        value: listingPrice.toString(),
+      })
       : await contract.resellToken(id, price, {
-          value: listingPrice.toString(),
-        });
+        value: listingPrice.toString(),
+      });
     await transaction.wait();
     console.log(transaction);
   };
@@ -136,6 +138,6 @@ const client = new NFTStorage({ token: NFT_STORAGE_TOKEN });
     checkIfWalletIsConnect();
   }, []);
   return (
-    <BlockchainConfig.Provider value={{fetchNFTs,uploadToIPFS,createNFT,createSale}}>{children}</BlockchainConfig.Provider>
+    <BlockchainConfig.Provider value={{ fetchNFTs, uploadToIPFS, createNFT, createSale, currentAccount, checkIfWalletIsConnect, connectWallet }}>{children}</BlockchainConfig.Provider>
   );
 };
