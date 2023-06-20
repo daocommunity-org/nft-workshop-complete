@@ -10,6 +10,9 @@ import { abi } from './utils'
 export const BlockchainConfig = React.createContext();
 
 export const BlockchainProvider = ({ children }) => {
+  const [currentAccount, setCurrentAccount] = useState("");
+
+
   const contr_addr = process.env.REACT_APP_CONTRACT;
   const NFT_STORAGE_TOKEN = process.env.REACT_APP_PUBLIC_NFT_STORAGE_TOKEN;
   const client = new NFTStorage({ token: NFT_STORAGE_TOKEN });
@@ -18,18 +21,15 @@ export const BlockchainProvider = ({ children }) => {
   const signer = provider.getSigner();
   const contract = new eth.Contract(contr_addr, abi, signer);
 
-  const nftCurrency = "MATIC";
-
-  const [currentAccount, setCurrentAccount] = useState("");
 
   const connectWallet = async () => {
     if (!window.ethereum) return alert("Please install MetaMask.");
-    const accounts = await window.ethereum.request({
+    const accounts = await window.ethereum.request({ //ethereum is a property that represents the Ethereum provider (like MetaMask)
       method: "eth_requestAccounts",
     });
     console.log("Connected")
     setCurrentAccount(accounts[0]);
-    window.location.reload();
+    window.location.reload(); // ensures that other parts of the application are aware of the newly connected Ethereum account.
   };
 
   const checkIfWalletIsConnect = async () => {
@@ -50,7 +50,6 @@ export const BlockchainProvider = ({ children }) => {
         description: "ABC",
         image: file,
       });
-
       return metadata.data.image.href;
     } catch (error) {
       console.log("Error uploading to file");
@@ -67,44 +66,35 @@ export const BlockchainProvider = ({ children }) => {
     });
     let url = "";
     try {
-      const metadata = new Blob([data]);
+      const metadata = new Blob([data]); // chunk of binary data
       const cid = await client.storeBlob(metadata);
       url = "https://ipfs.io/ipfs/" + cid;
       console.log(url);
       await createSale(url, price);
-      // await uploadArtOffChain(url,mood1,mood2,mood3)
     } catch (error) {
       console.log("Error uploading to create nft", error);
     }
     return fileUrl;
   };
 
-  const createSale = async (url, formInputPrice, isReselling, id) => {
-    const web3modal = new Web3Modal();
-    const connection = await web3modal.connect();
-    const provider = new eth.providers.Web3Provider(connection);
-    const signer = await provider.getSigner();
-
+  const createSale = async (url, formInputPrice) => {
     const price = eth.utils.parseUnits(formInputPrice, "ether");
-
-    const listingPrice = await contract.getListingPrice();
-
-    const transaction = !isReselling
-      ? await contract.createToken(url, price, {
+    try {
+      const listingPrice = await contract.getListingPrice(); // fees charged by the marketplace to allow ppl upload the nft
+      const transaction = await contract.createToken(url, price, {
         value: listingPrice.toString(),
       })
-      : await contract.resellToken(id, price, {
-        value: listingPrice.toString(),
-      });
-    await transaction.wait();
-    console.log(transaction);
+      await transaction.wait();
+      console.log(transaction);
+
+    } catch (error) {
+      console.log("An error occured at the create sale function - ", error)
+    }
   };
 
   const fetchNFTs = async (setLoading) => {
     setLoading(true);
-
     const data = await contract.fetchMarketItems();
-
     const items = await Promise.all(
       data.map(async ({ tokenId, seller, owner, price: unformattedPrice }) => {
         const tokenURI = await contract.tokenURI(tokenId);
