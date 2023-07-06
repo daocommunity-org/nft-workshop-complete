@@ -5,11 +5,13 @@ import axios from "axios";
 import { NFTStorage, Blob } from "nft.storage";
 import { Contract } from "ethers";
 import { abi } from './utils'
-// require('dotenv').config()
+
+
 
 export const BlockchainConfig = React.createContext();
 
 export const BlockchainProvider = ({ children }) => {
+
   const [currentAccount, setCurrentAccount] = useState("");
 
 
@@ -79,11 +81,14 @@ export const BlockchainProvider = ({ children }) => {
 
   const createSale = async (url, formInputPrice) => {
     const price = eth.utils.parseUnits(formInputPrice, "ether");
+    console.log(price)
     try {
       const listingPrice = await contract.getListingPrice(); // fees charged by the marketplace to allow ppl upload the nft
+      console.log("Listing price - ", listingPrice)
       const transaction = await contract.createToken(url, price, {
         value: listingPrice.toString(),
       })
+      console.log(transaction)
       await transaction.wait();
       console.log(transaction);
 
